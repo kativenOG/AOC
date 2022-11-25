@@ -1,6 +1,6 @@
 # La maschera deve essere calcolata ogni volta che cambio digit, e non solo all'inizio
 import math ,copy 
-import pdb 
+# import pdb 
 
 file = open("./input.txt","r")
 data = file.read().split("\n")
@@ -41,7 +41,7 @@ def generate_mask(current_data,digit,mode):
     if(mode==0): return_mask= 1 if ((return_mask)>(treshold - 1)) else 0 
     else: return_mask= 1 if (return_mask<(treshold + 1)) else 0 
     print("Return mask:",return_mask)
-    pdb.set_trace()
+    # pdb.set_trace()
     return return_mask 
 
 def evaluate(edata,mode):
@@ -56,7 +56,7 @@ def evaluate(edata,mode):
                 break
             elif int(value[digit]) != target: 
                 edata.pop(i) 
-                i+=1
+                i-=1
 
         if(len(data) == 1): 
             result = int(edata[0],2)
