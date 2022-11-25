@@ -47,8 +47,11 @@ def first_star(boards):
 def second_star(boards):
     # lets mark all the winning numbers inside the tables 
     for point in winning_numbers:
-        for i,board in enumerate(boards):
-            for j,line in enumerate(board):
+        # for i,board in enumerate(boards):
+        i=0
+        while i< len(boards):
+            for j,line in enumerate(boards[i]):
+                exit_board = False 
                 for k,number in enumerate(line):
                     column = 0 
                     row =0  
@@ -67,7 +70,10 @@ def second_star(boards):
                             else:
                                 boards.pop(i)
                                 i-=1
+                                exit_board= True 
                         break
+                if (exit_board == True ): break 
+            i+=1
 
 print("First Star:",first_star(Boards))
 print("Second Star:",second_star(Boards))
