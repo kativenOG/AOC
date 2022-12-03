@@ -8,7 +8,7 @@ def snack_provider(Data):
         cal= list(map(int,elf.split("\n")))
         elfs.append(sum(cal)) 
     elfs.sort()
-    return sum(elfs[-1:]),sum(elfs[-3:]) 
+    return elfs[-1:],sum(elfs[-3:]) 
 
 firstStar,secondStar = snack_provider(data)
-print(f"First star result:{firstStar}\nSecond star result: {secondStar}")
+print(f"First star result:{firstStar[0]}\nSecond star result: {secondStar}")
