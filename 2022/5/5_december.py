@@ -1,3 +1,4 @@
+import copy
 file = open("./input.txt").read().splitlines()
 
 # Getting the initial configuration
@@ -38,12 +39,12 @@ def second_star(commandss,cargo):
             gru.append(appo) 
         for appo in gru[::-1]:
             cargo[int(command[5])-1].append(appo)
-    print(cargo)
+
     # Calculating the Result 
     result = []
     for i in range(9):
         result.append(cargo[i][len(cargo[i])-1])
     return result
 
-# print(f"First Star: {first_star(commands,cargo_ship)}\n")
-print(f"Second Star: {second_star(commands,cargo_ship)}")
+cargo_ship_1 = copy.deepcopy(cargo_ship)
+print(f"First Star: {first_star(commands,cargo_ship)}\nSecond Star: {second_star(commands,cargo_ship_1)}")
