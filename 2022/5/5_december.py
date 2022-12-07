@@ -6,11 +6,12 @@ cargo_ship = [[] for _ in range(n)]
 for line in file[:10]: # Carico i Carichi 
     for i,char in enumerate(line):
         if char.isalpha(): cargo_ship[round(i/4)].append(char)
-# Inverto le stack per avere come ultimo elemento quello che è da poppare 
+
+# Inverto le liste per avere come ultimo elemento quello che è da poppare  (ultimo == top of the stack)
 for i in range(n): 
     cargo_ship[i] = cargo_ship[i][::-1]
 
-# Lista dei Comandi ! 
+# Lista dei Comandi! 
 commands = file[10:] 
 
 def first_star(commandss,cargo):
@@ -35,9 +36,9 @@ def second_star(commandss,cargo):
         for _ in range(int(command[1])):
             appo = cargo[int(command[3])-1].pop()
             gru.append(appo) 
-        for appo in gru:
+        for appo in gru[::-1]:
             cargo[int(command[5])-1].append(appo)
-
+    print(cargo)
     # Calculating the Result 
     result = []
     for i in range(9):
