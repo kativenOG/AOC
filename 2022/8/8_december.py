@@ -36,7 +36,6 @@ def three_finder(Forest): # Non stai controllando le 2 collone e righe per le al
                     print("Increased on Down\n")
                     visible+= 1
 
-
     return visible
 
 
