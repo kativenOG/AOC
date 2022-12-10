@@ -1,4 +1,4 @@
-# from time import sleep
+from time import sleep
 from copy import deepcopy 
 commands = open("./input.txt","r").read().splitlines()
 crt_commands = deepcopy(commands)
@@ -29,33 +29,39 @@ def cpu(Commands):
 def crt(Commands):
     crt = []
     register = 1 
-    clock = 1 
+    clock = 0 
     for command in Commands:
-        clock+=1
-        if clock==41: clock=0
+        if clock==40: clock=0
         if command=="noop":
             sprite = [int(register-1),register,int(register+1)]
             append_value =  "\u2588" if (clock in sprite) else " " 
+            # print(f"Sprite: {[*sprite]}, Clock: {clock}, CRT: {append_value}")
             crt.append(append_value)
+            clock+=1
         else:
             command = command.split()
             sprite = [int(register-1),register,int(register+1)]
             append_value = "\u2588" if (clock in sprite) else " " 
+            # print(f"Sprite: {[*sprite]}, Clock: {clock}, CRT: {append_value}")
             crt.append(append_value)
-
             clock+=1
-            if clock==41: clock=0
+            if clock==40: clock=0
             append_value =  "\u2588" if (clock in sprite) else " " 
+            # print(f"Sprite: {[*sprite]}, Clock: {clock}, CRT: {append_value}")
             crt.append(append_value)
             register += int(command[1]) 
+            clock+=1
     return crt
 
-# print(f"First Star: {cpu(commands)}")
+print(f"First Star: {cpu(commands)}")
 crt_output = crt(crt_commands)
 print("Second Star: ")
-for line in range(6):
-    for i in range(0,40):
-        pos = i+ ( (40*(line)) -1) if line!=0 else i
-        print(crt_output[pos],end='')
-    print("\n")
+previous_line = 0 
+for line in range(0,280,40):
+    for i in range(previous_line,line):
+        print(crt_output[i],end='')
+        sleep(0.01)
+    print()
+    previous_line = line
+print()
 
