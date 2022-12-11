@@ -25,13 +25,14 @@ class Monkey:
             for item in self.items:
                 self.counter+=1
                 inspected = item 
-                inspected = round(inspected/3) # Worry Level Decreases 
 
                 # Monkey Inspection 
-                if(self.worry_factor[1]!="old"): number = int(self.worry_factor[1])  
-                else: number = inspected
-                if self.worry_factor[0] == "*": inspected = number * inspected # MULTIPLICATION
-                else: inspected = number + inspected  # SUMMATION
+                if(self.worry_factor[1]=="old"): number = inspected
+                else:  number = int(self.worry_factor[1])
+                if self.worry_factor[0] == "*": inspected = inspected * number # MULTIPLICATION
+                else: inspected = inspected + number # SUMMATION
+
+                inspected = round(inspected/3) # Worry Level Decreases after inspection
             
                 # Monkey Test:
                 if inspected % self.test_dividendo == 0: return_array.append(list([self.true_value, inspected]))
@@ -49,19 +50,18 @@ data = open("./input.txt","r").read().split("\n\n")
 monkeys = []
 for monkey in data:
     monkeys.append(Monkey(monkey))
-
+for monkey in monkeys:
+    monkey.show()
 
 def first_star(Monkeys)->int:
     for _ in range(20): # Rounds
         for monkey in Monkeys:
             monkey_item_array = monkey.throw()
-            if (monkey_item_array!=None):
-                for object in monkey_item_array:
-                    Monkeys[object[0]].catch(object[1])
+            if (monkey_item_array!=None): [ Monkeys[object[0]].catch(object[1]) for object in monkey_item_array ]
 
-
+    print(f"Counters: {list(map(lambda x: x.counter,Monkeys))}")
     counters = sorted(list(map(lambda x: x.counter,Monkeys)),reverse=True)
-    print(counters)
+    print(f"Sorted Counters: {counters}")
     return  counters[0]*counters[1]
 
 
