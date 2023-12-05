@@ -14,6 +14,7 @@ class category():
     def check_value(self,seed_value)-> int:
         for rangee in self.range_list:
             src_start, src_end, destination = rangee
+            if seed_value < src_start: return seed_value 
             if src_start <= seed_value <= src_end:
                 return seed_value - src_start + destination
             
@@ -56,39 +57,33 @@ def first_star(input: list)->int:
 
 def second_star(input: list)->int:
     seeds_line= input[0].split(':')[1]
-    seeds_line = list(map(int,seeds_line.split()))
-    seeds,previous =[],-1 
-    for seed in seeds_line: 
-        if previous == -1: previous = seed 
-        else: 
-            # print(list(range(previous,previous+seed)))
-            seeds.extend(list(range(previous,previous+seed)))
-            previous = -1
-     
-    # print()
-    del input[0] 
     categories = []
 
-    for line in input:
+    for line in input[1:]:
         if len(line)<2: continue 
         elif '-' in line: 
-            categories[-1].sort_ranges()
             categories.append(category())
         else:
             vals= list(map(int,line.split()))
             categories[-1].add_range(vals[0],vals[1],vals[2])
+    for cat in categories: cat.sort_ranges()
     del input 
-    
-    seeds_locs = seeds
-    for cat in tqdm(categories):
-        new_vals = []
-        for seed in seeds_locs:
-            new_vals.append(cat.check_value(seed))
-        # print(new_vals)
-        seeds_locs = new_vals
-        cat.free_memory()
 
-    return min(seeds_locs)
+    # Divide and Conquer 
+    min_seeds = 100000000000000000000000000000
+    seeds_line = list(map(int,seeds_line.split()))
+    previous = -1 
+    for seed in seeds_line: 
+        if previous == -1: previous = seed 
+        else: 
+            for seed in range(previous,previous+seed):
+                new_val = 0 
+                for cat in categories:
+                    new_val = cat.check_value(seed)
+                min_seeds = min(min_seeds,new_val)
+            previous = -1
+
+    return min_seeds
 
 # input = open('test.txt','r').read().splitlines()
 input = open('input.txt','r').read().splitlines()
