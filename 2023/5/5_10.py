@@ -73,10 +73,18 @@ def second_star(input: list)->int:
     min_seeds = 100000000000000000000000000000
     seeds_line = list(map(int,seeds_line.split()))
     previous = -1 
-    for seed in seeds_line: 
+    for seed in tqdm(seeds_line): 
         if previous == -1: previous = seed 
         else: 
-            for seed in range(previous,previous+seed):
+            size = 1000
+            while seed>size: size = size//2
+            for seed in range(previous,previous+seed,size):
+                new_val = 0 
+                for cat in categories:
+                    new_val = cat.check_value(seed)
+                min_seeds = min(min_seeds,new_val)
+            remaining = (previous+seed)%size
+            for seed in range(previous+seed-remaining,previous+seed):
                 new_val = 0 
                 for cat in categories:
                     new_val = cat.check_value(seed)
