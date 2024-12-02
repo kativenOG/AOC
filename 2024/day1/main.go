@@ -100,6 +100,7 @@ func starTwo(input []string) {
 func main() {
 	var filename string
 	flag.StringVar(&filename, "filename", "input.txt", "the input file name")
+	flag.Parse()
 	input := readinput(filename)
 
 	starOne(input)
