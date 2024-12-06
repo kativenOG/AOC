@@ -3,14 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"maps"
 	"math"
 	"os"
 	"slices"
 	"strconv"
 	"strings"
-
-	"golang.org/x/tools/go/analysis/passes/deepequalerrors"
 )
 
 func dieOnError(err error) {
@@ -65,29 +62,6 @@ func findCorrectInputsMiddleValues(input []string, correctlyOrdered bool) (resul
 		rightValue, err := strconv.Atoi(strings.TrimSpace(values[1]))
 		mappedRules[leftValue] = append(mappedRules[leftValue], rightValue)
 	}
-	// recursively deepenedMap for second star
-	deepMappedRules := make(map[int][]int, len(mappedRules))
-	if correctlyOrdered {
-		// first deep copy the initial map
-		for key, value := range mappedRules {
-			var newValue []int
-			copy(newValue, value)
-			deepMappedRules[key] = value
-		}
-		// Then keep expanding it
-		var changed bool
-		newValues := map[int]map[int]struct{}{}
-		for true {
-			for key, value := range mappedRules {
-				if _, ok := newValues[key]; !ok {
-
-				}
-				for _, val := range value {
-
-				}
-			}
-		}
-	}
 
 inputLoop:
 	for _, line := range problemInputs {
@@ -105,24 +79,29 @@ inputLoop:
 				for _, rule := range relativeRules {
 					// If the rule is before the input the input automatically becomes invalid
 					if rulePos, numberExists := mappedDirectIndex[rule]; numberExists && targetPos > rulePos {
-						continue inputLoop
+						if correctlyOrdered {
+							slices.SortFunc(inputList, func(a, b int) int {
+								if rulesA, ok := mappedRules[a]; ok && slices.Contains(rulesA, b) {
+									return -1
+								} else if rulesB, ok := mappedRules[b]; ok && slices.Contains(rulesB, a) {
+									return 1
+								}
+								return 0
+							})
+
+							middleIndex := int(math.Floor(float64(len(inputList)) / 2.0))
+							result += inputList[middleIndex]
+							continue inputLoop
+						}
 					}
 				}
 			}
 		}
 
-		if correctlyOrdered {
-			slices.SortFunc(inputList, func(a, b int) int {
-				if slices.Contains(deepMappedRules[a], b) {
-					return 1
-				} else if slices.Contains(deepMappedRules[b], a) {
-					return -1
-				}
-				return 0
-			})
+		if !correctlyOrdered {
+			middleIndex := int(math.Floor(float64(len(inputList)) / 2.0))
+			result += inputList[middleIndex]
 		}
-		middleIndex := int(math.Floor(float64(len(inputList)) / 2.0))
-		result += inputList[middleIndex]
 	}
 	return result
 }
@@ -131,7 +110,7 @@ func starOne(input []string) {
 	fmt.Printf("Star One: %d\n", findCorrectInputsMiddleValues(input, false))
 }
 func starTwo(input []string) {
-	fmt.Printf("Star One: %d\n", findCorrectInputsMiddleValues(input, true))
+	fmt.Printf("Star Two: %d\n", findCorrectInputsMiddleValues(input, true))
 }
 
 func main() {
