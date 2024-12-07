@@ -16,6 +16,13 @@ func dieOnError(err error) {
 	}
 }
 
+func debugPrintf(shouldDebug bool, args ...interface{}) {
+	if !shouldDebug {
+		return
+	}
+	fmt.Printf(args[0].(string), args[1:]...)
+}
+
 func parseInputFIie(filename string) (inputList []string) {
 	content, err := os.ReadFile(filename)
 	dieOnError(err)
@@ -28,23 +35,50 @@ func parseInputFIie(filename string) (inputList []string) {
 
 func invertString(target string) string {
 	runes := []rune(target)
-	for i, j := 0, len(runes); i < j; i, j = i+1, j-1 {
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
 		runes[i], runes[j] = runes[j], runes[i]
 	}
 	return string(runes)
 }
 
-func naiveParse(input []string, rs []*regexp.Regexp) (res int) {
+func naiveParse(input []string, rs []*regexp.Regexp, shouldDebug bool) (res int) {
 	for _, line := range input {
 		for _, r := range rs {
 			matches := r.FindAllString(line, -1)
+			debugPrintf(shouldDebug, "%s %d", line, len(matches))
 			res += len(matches)
 		}
 	}
 	return
 }
 
-func crossWord(input []string, target string) (res int) {
+func realMatrix(input []string) (realMatrix [][]string) {
+	realMatrix = make([][]string, 0, len(input))
+	for _, line := range input {
+		runeLine := []rune(line)
+		parsedLine := lo.Map(runeLine, func(val rune, _ int) string {
+			return string(val)
+		})
+		realMatrix = append(realMatrix, parsedLine)
+	}
+
+	return
+}
+
+func parseStringList(stringList []string, rs []*regexp.Regexp) (res int) {
+	var parsedList string
+	for _, val := range stringList {
+		parsedList += val
+	}
+
+	for _, r := range rs {
+		res += len(r.FindAllString(parsedList, -1))
+	}
+
+	return
+}
+
+func crossWord(input []string, target string, shouldDebug bool) (res int) {
 	directR := regexp.MustCompile(target)
 	inverseR := regexp.MustCompile(invertString(target))
 	rs := []*regexp.Regexp{
@@ -53,7 +87,9 @@ func crossWord(input []string, target string) (res int) {
 	}
 
 	// Check for horizzontal matches
-	res += naiveParse(input, rs)
+	debugPrintf(shouldDebug, "ORIZZONTAL:\n")
+	res += naiveParse(input, rs, shouldDebug)
+	debugPrintf(shouldDebug, "\n")
 
 	// Create a vertical version
 	n_colums := len(input[0])
@@ -69,19 +105,59 @@ func crossWord(input []string, target string) (res int) {
 		return string(column)
 	})
 	// Finally check for vertical matches
-	res += naiveParse(verticalInput, rs)
+	debugPrintf(shouldDebug, "VERTICAL:\n")
+	res += naiveParse(verticalInput, rs, shouldDebug)
+	debugPrintf(shouldDebug, "\n")
 
-	// Check for diagonal matches
-	var diagonalInput []string
-	length, width := len(input), len(input)
-	res += naiveParse(diagonalInput, rs)
+	// Check for diagonal matches on main diagonal
+	var (
+		height       = len(input)
+		width        = len(input[0])
+		inputMatrix  = realMatrix(input)
+		matrixTarget string
+	)
+
+	debugPrintf(shouldDebug, "MAIN DIAGONAL:\n")
+	for i := 0; i < height; i++ {
+		plainDiagonal := []string{}
+		if i == 0 {
+			plainDiagonal = append(plainDiagonal, inputMatrix[i][0])
+		} else {
+			// diagonal := []MatrixEntry{}
+			for j := 0; j < i+1; j++ {
+				matrixTarget = inputMatrix[i-j][j]
+				plainDiagonal = append(plainDiagonal, matrixTarget)
+			}
+		}
+		res += parseStringList(plainDiagonal, rs)
+		debugPrintf(shouldDebug, "%v %d %s", plainDiagonal, parseStringList(plainDiagonal, rs), "\n")
+	}
+	debugPrintf(shouldDebug, "\n")
+
+	// Check for diagonal matches on other diagonal
+	debugPrintf(shouldDebug, "CROSS DIAGONAL:\n")
+	for i := 0; i < height; i++ {
+		plainDiagonal := []string{}
+		if i == 0 {
+			plainDiagonal = append(plainDiagonal, inputMatrix[i][width-1])
+		} else {
+			for k, j := 0, width-1; k < i+1; k, j = k+1, j-1 {
+				matrixTarget = inputMatrix[i-k][j]
+				plainDiagonal = append(plainDiagonal, matrixTarget)
+			}
+		}
+		res += parseStringList(plainDiagonal, rs)
+
+		debugPrintf(shouldDebug, "%v %d %s", plainDiagonal, parseStringList(plainDiagonal, rs), "\n")
+	}
+	debugPrintf(shouldDebug, "\n")
 
 	return
 }
 
-func starOne(input []string) {
+func starOne(input []string, shouldDebug bool) {
 	target := "XMAS"
-	fmt.Println("Star One: %d", crossWord(input, target))
+	fmt.Printf("Star One: %d\n", crossWord(input, target, shouldDebug))
 }
 
 func starTwo(input []string) {
@@ -89,8 +165,10 @@ func starTwo(input []string) {
 
 func main() {
 	var filename string
+	var debug bool
 	flag.StringVar(&filename, "filename", "input.txt", "the input file")
+	flag.BoolVar(&debug, "debug", false, "verbose output on lines and matches")
 	flag.Parse()
 	input := parseInputFIie(filename)
-	fmt.Println(len(input))
+	starOne(input, debug)
 }
