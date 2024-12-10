@@ -3,17 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/AOC/2024/utils"
 	"github.com/samber/lo"
-	"os"
 	"strconv"
 	"strings"
 )
-
-func dieOnError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
 
 // DIRECTIONS:
 const (
@@ -76,23 +70,13 @@ func parseReportDampened(levels []int) (res bool) {
 	return
 }
 
-func parseInputFIie(filename string) (inputList []string) {
-	content, err := os.ReadFile(filename)
-	dieOnError(err)
-	inputList = strings.Split(string(content), "\n")
-	if len(inputList[len(inputList)-1]) == 0 {
-		inputList = inputList[:len(inputList)-1]
-	}
-	return
-}
-
 func starOne(inputs []string, dampened bool) {
 	var validReports int
 	for _, line := range inputs {
 		stringLevels := strings.Split(line, " ")
 		levels := lo.Map(stringLevels, func(val string, _ int) int {
 			res, err := strconv.Atoi(strings.TrimSpace(val))
-			dieOnError(err)
+			utils.DieOnError(err)
 			return res
 		})
 		var ok bool
@@ -118,11 +102,8 @@ func starTwo(inputs []string) {
 }
 
 func main() {
-
-	var filename string
-	flag.StringVar(&filename, "filename", "inputs.txt", "the input file")
-	flag.Parse()
-	input := parseInputFIie(filename)
+	filename, _ := utils.ParseFlags()
+	input := utils.ParseInputFile(filename)
 
 	starOne(input, false)
 	starTwo(input)

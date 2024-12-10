@@ -3,48 +3,27 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/AOC/2024/utils"
 	"github.com/samber/lo"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
 )
-
-func dieOnErr(err error) {
-	if err != nil {
-		panic(fmt.Errorf("fatal error: %w", err))
-	}
-	return
-}
-
-// readinput returns the parsed file content in an array of string,
-// in which each entry reppresents a line.
-func readinput(filename string) []string {
-	f, err := os.ReadFile(filename)
-	dieOnErr(err)
-
-	res := strings.Split(string(f), "\n")
-	if len(res[len(res)-1]) == 0 {
-		res = res[:len(res)-1]
-	}
-
-	return res
-}
 
 // parseIntoIntegerLists parses the input in two integer lists and sortes them DESC
 func parseIntoIntegerLists(input []string) (listOne []int, listTwo []int) {
 	for i, line := range input {
 		contents := strings.Split(line, "   ")
 		if contLen := len(contents); contLen != 2 {
-			dieOnErr(fmt.Errorf("input in line %d has %d ids instead of 2", i, contLen))
+			utils.DieOnError(fmt.Errorf("input in line %d has %d ids instead of 2", i, contLen))
 		}
 
 		numberOne, err := strconv.Atoi(contents[0])
-		dieOnErr(err)
+		utils.DieOnError(err)
 		listOne = append(listOne, numberOne)
 
 		numberTwo, err := strconv.Atoi(strings.TrimSpace(contents[1]))
-		dieOnErr(err)
+		utils.DieOnError(err)
 		listTwo = append(listTwo, numberTwo)
 	}
 	slices.Sort(listOne)
@@ -98,10 +77,8 @@ func starTwo(input []string) {
 }
 
 func main() {
-	var filename string
-	flag.StringVar(&filename, "filename", "input.txt", "the input file name")
-	flag.Parse()
-	input := readinput(filename)
+	filename, _ := utils.ParseFlags()
+	input := utils.ParseInputFile(filename)
 
 	starOne(input)
 	starTwo(input)

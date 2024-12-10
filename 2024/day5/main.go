@@ -4,27 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"math"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/AOC/2024/utils"
 )
-
-func dieOnError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func parseInputFile(filename string) (inputList []string) {
-	content, err := os.ReadFile(filename)
-	dieOnError(err)
-	inputList = strings.Split(string(content), "\n")
-	if len(inputList[len(inputList)-1]) == 0 {
-		inputList = inputList[:len(inputList)-1]
-	}
-	return
-}
 
 func getRulesAndInputs(input []string) (rules []string, problemInput []string) {
 	for i, line := range input {
@@ -39,7 +24,7 @@ func parseList(stringList string) (res []int) {
 	values := strings.Split(stringList, ",")
 	for _, value := range values {
 		parsedValue, err := strconv.Atoi(strings.TrimSpace(value))
-		dieOnError(err)
+		utils.DieOnError(err)
 		res = append(res, parsedValue)
 	}
 	return
@@ -55,7 +40,7 @@ func findCorrectInputsMiddleValues(input []string, correctlyOrdered bool) (resul
 			panic("more than 2 values in a rule")
 		}
 		leftValue, err := strconv.Atoi(strings.TrimSpace(values[0]))
-		dieOnError(err)
+		utils.DieOnError(err)
 		if _, ok := mappedRules[leftValue]; !ok {
 			mappedRules[leftValue] = []int{}
 		}
@@ -117,7 +102,7 @@ func main() {
 	var filename string
 	flag.StringVar(&filename, "filename", "input.txt", "the input file")
 	flag.Parse()
-	input := parseInputFile(filename)
+	input := utils.ParseInputFile(filename)
 
 	starOne(input)
 	starTwo(input)

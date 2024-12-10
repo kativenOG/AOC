@@ -3,49 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
+	"github.com/AOC/2024/utils"
 	"regexp"
-	"strings"
 
 	"github.com/samber/lo"
 )
-
-func dieOnError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func debugPrintf(shouldDebug bool, args ...interface{}) {
-	if !shouldDebug {
-		return
-	}
-	fmt.Printf(args[0].(string), args[1:]...)
-}
-
-func parseInputFIie(filename string) (inputList []string) {
-	content, err := os.ReadFile(filename)
-	dieOnError(err)
-	inputList = strings.Split(string(content), "\n")
-	if len(inputList[len(inputList)-1]) == 0 {
-		inputList = inputList[:len(inputList)-1]
-	}
-	return
-}
-
-func invertString(target string) string {
-	runes := []rune(target)
-	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
-		runes[i], runes[j] = runes[j], runes[i]
-	}
-	return string(runes)
-}
 
 func naiveParse(input []string, rs []*regexp.Regexp, shouldDebug bool) (res int) {
 	for _, line := range input {
 		for _, r := range rs {
 			matches := r.FindAllString(line, -1)
-			debugPrintf(shouldDebug, "%s %d\n", line, len(matches))
+			utils.DebugPrintf(shouldDebug, "%s %d\n", line, len(matches))
 			res += len(matches)
 		}
 	}
@@ -80,16 +48,16 @@ func parseStringList(stringList []string, rs []*regexp.Regexp) (res int) {
 
 func crossWord(input []string, target string, shouldDebug bool) (res int) {
 	directR := regexp.MustCompile(target)
-	inverseR := regexp.MustCompile(invertString(target))
+	inverseR := regexp.MustCompile(utils.InvertString(target))
 	rs := []*regexp.Regexp{
 		directR,
 		inverseR,
 	}
 
 	// Check for horizzontal matches
-	debugPrintf(shouldDebug, "ORIZZONTAL:\n")
+	utils.DebugPrintf(shouldDebug, "ORIZZONTAL:\n")
 	res += naiveParse(input, rs, shouldDebug)
-	debugPrintf(shouldDebug, "\n")
+	utils.DebugPrintf(shouldDebug, "\n")
 
 	// Create a vertical version
 	n_colums := len(input[0])
@@ -105,9 +73,9 @@ func crossWord(input []string, target string, shouldDebug bool) (res int) {
 		return string(column)
 	})
 	// Finally check for vertical matches
-	debugPrintf(shouldDebug, "VERTICAL:\n")
+	utils.DebugPrintf(shouldDebug, "VERTICAL:\n")
 	res += naiveParse(verticalInput, rs, shouldDebug)
-	debugPrintf(shouldDebug, "\n")
+	utils.DebugPrintf(shouldDebug, "\n")
 
 	// Check for diagonal matches on main diagonal
 	var (
@@ -117,7 +85,7 @@ func crossWord(input []string, target string, shouldDebug bool) (res int) {
 		matrixTarget string
 	)
 
-	debugPrintf(shouldDebug, "MAIN DIAGONAL:\n")
+	utils.DebugPrintf(shouldDebug, "MAIN DIAGONAL:\n")
 	for i := 0; i < height; i++ {
 		plainDiagonal := []string{}
 		if i == 0 {
@@ -130,12 +98,12 @@ func crossWord(input []string, target string, shouldDebug bool) (res int) {
 			}
 		}
 		res += parseStringList(plainDiagonal, rs)
-		debugPrintf(shouldDebug, "%v %d %s", plainDiagonal, parseStringList(plainDiagonal, rs), "\n")
+		utils.DebugPrintf(shouldDebug, "%v %d %s", plainDiagonal, parseStringList(plainDiagonal, rs), "\n")
 	}
-	debugPrintf(shouldDebug, "\n")
+	utils.DebugPrintf(shouldDebug, "\n")
 
 	// Check for diagonal matches on other diagonal
-	debugPrintf(shouldDebug, "CROSS DIAGONAL:\n")
+	utils.DebugPrintf(shouldDebug, "CROSS DIAGONAL:\n")
 	for i := 0; i < height; i++ {
 		plainDiagonal := []string{}
 		if i == 0 {
@@ -148,9 +116,9 @@ func crossWord(input []string, target string, shouldDebug bool) (res int) {
 		}
 		res += parseStringList(plainDiagonal, rs)
 
-		debugPrintf(shouldDebug, "%v %d %s", plainDiagonal, parseStringList(plainDiagonal, rs), "\n")
+		utils.DebugPrintf(shouldDebug, "%v %d %s", plainDiagonal, parseStringList(plainDiagonal, rs), "\n")
 	}
-	debugPrintf(shouldDebug, "\n")
+	utils.DebugPrintf(shouldDebug, "\n")
 
 	return
 }
@@ -160,15 +128,12 @@ func starOne(input []string, shouldDebug bool) {
 	fmt.Printf("Star One: %d\n", crossWord(input, target, shouldDebug))
 }
 
-func starTwo(input []string) {
+func starTwo(input []string, shouldDebug bool) {
 }
 
 func main() {
-	var filename string
-	var debug bool
-	flag.StringVar(&filename, "filename", "input.txt", "the input file")
-	flag.BoolVar(&debug, "debug", false, "verbose output on lines and matches")
-	flag.Parse()
-	input := parseInputFIie(filename)
+	filename, debug := utils.ParseFlags()
+	input := utils.ParseInputFile(filename)
 	starOne(input, debug)
+	// starTwo(input, debug)
 }

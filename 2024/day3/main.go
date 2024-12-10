@@ -3,32 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
+	"github.com/AOC/2024/utils"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 // Regexp for both stars
 var mainOne = regexp.MustCompile("mul\\(\\d+,\\d+\\)")
 var mainTwo = regexp.MustCompile("mul\\(\\d+,\\d+\\)|do\\(\\)|don\\'t\\(\\)")
 var numberR = regexp.MustCompile("\\d+")
-
-func dieOnError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func parseInputFIie(filename string) (inputList []string) {
-	content, err := os.ReadFile(filename)
-	dieOnError(err)
-	inputList = strings.Split(string(content), "\n")
-	if len(inputList[len(inputList)-1]) == 0 {
-		inputList = inputList[:len(inputList)-1]
-	}
-	return
-}
 
 func starOne(input []string) {
 	var result int
@@ -37,12 +20,12 @@ func starOne(input []string) {
 		for _, match := range matches {
 			numbers := numberR.FindAllString(match, -1)
 			if len(numbers) != 2 {
-				dieOnError(fmt.Errorf("too many operands in match %s", match))
+				utils.DieOnError(fmt.Errorf("too many operands in match %s", match))
 			}
 			n1, err := strconv.Atoi(numbers[0])
-			dieOnError(err)
+			utils.DieOnError(err)
 			n2, err := strconv.Atoi(numbers[1])
-			dieOnError(err)
+			utils.DieOnError(err)
 			result += n1 * n2
 		}
 	}
@@ -71,12 +54,12 @@ func starTwo(input []string) {
 
 			numbers := numberR.FindAllString(match, -1)
 			if len(numbers) != 2 {
-				dieOnError(fmt.Errorf("too many operands in match %s", match))
+				utils.DieOnError(fmt.Errorf("too many operands in match %s", match))
 			}
 			n1, err := strconv.Atoi(numbers[0])
-			dieOnError(err)
+			utils.DieOnError(err)
 			n2, err := strconv.Atoi(numbers[1])
-			dieOnError(err)
+			utils.DieOnError(err)
 			result += n1 * n2
 		}
 	}
@@ -84,10 +67,8 @@ func starTwo(input []string) {
 }
 
 func main() {
-	var filename string
-	flag.StringVar(&filename, "filename", "input.txt", "the input file")
-	flag.Parse()
-	input := parseInputFIie(filename)
+	filename, _ := utils.ParseFlags()
+	input := utils.ParseInputFile(filename)
 
 	starOne(input)
 	starTwo(input)

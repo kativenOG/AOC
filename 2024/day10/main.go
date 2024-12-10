@@ -3,27 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
+	"github.com/AOC/2024/utils"
 	"strconv"
-	"strings"
 	"time"
 )
-
-func dieOnError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func parseInputFile(filename string) (inputList []string) {
-	content, err := os.ReadFile(filename)
-	dieOnError(err)
-	inputList = strings.Split(string(content), "\n")
-	if len(inputList[len(inputList)-1]) == 0 {
-		inputList = inputList[:len(inputList)-1]
-	}
-	return
-}
 
 type coordinate struct {
 	x, y int
@@ -52,7 +35,7 @@ func parseInputGrid(input []string) (g grid) {
 		runeLine := []rune(line)
 		for y, val := range runeLine {
 			val, err := strconv.Atoi(string(val))
-			dieOnError(err)
+			utils.DieOnError(err)
 			g[coordinate{x, y}] = val
 		}
 	}
@@ -170,10 +153,8 @@ func starTwo(input []string) {
 }
 
 func main() {
-	var filename string
-	flag.StringVar(&filename, "filename", "input.txt", "the input file")
-	flag.Parse()
-	input := parseInputFile(filename)
+	filename, _ := utils.ParseFlags()
+	input := utils.ParseInputFile(filename)
 
 	starOne(input)
 	starTwo(input)
