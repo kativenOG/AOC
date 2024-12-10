@@ -45,7 +45,7 @@ func naiveParse(input []string, rs []*regexp.Regexp, shouldDebug bool) (res int)
 	for _, line := range input {
 		for _, r := range rs {
 			matches := r.FindAllString(line, -1)
-			debugPrintf(shouldDebug, "%s %d", line, len(matches))
+			debugPrintf(shouldDebug, "%s %d\n", line, len(matches))
 			res += len(matches)
 		}
 	}
