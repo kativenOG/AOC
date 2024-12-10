@@ -4,12 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/samber/lo"
 )
 
 func dieOnError(err error) {
@@ -32,6 +29,10 @@ type coordinate struct {
 	x, y int
 }
 
+func (c coordinate) String() string {
+	return fmt.Sprintf("[%d-%d]", c.x, c.y)
+}
+
 func (pos coordinate) coordinateSum(secondCoordinate coordinate) (newCoordinate coordinate) {
 	return coordinate{
 		pos.x + secondCoordinate.x,
@@ -40,6 +41,10 @@ func (pos coordinate) coordinateSum(secondCoordinate coordinate) (newCoordinate 
 }
 
 type grid map[coordinate]int
+
+func (g grid) CoorValueString(coor coordinate) string {
+	return fmt.Sprintf("Coordinate: %s, Value: %d", coor, g[coor])
+}
 
 func parseInputGrid(input []string) (g grid) {
 	g = make(map[coordinate]int)
@@ -57,20 +62,19 @@ func parseInputGrid(input []string) (g grid) {
 func (dir coordinate) allPossibleCoordinates(maxX, maxY int) []coordinate {
 	res := []coordinate{}
 	// NORD
-	if (dir.x - 1) > 0 {
+	if (dir.x - 1) >= 0 {
 		res = append(res, dir.coordinateSum(coordinate{-1, 0}))
 	}
 	// SUD
-	if (dir.x + 1) < maxX {
+	if (dir.x + 1) <= maxX {
 		res = append(res, dir.coordinateSum(coordinate{1, 0}))
 	}
-
 	// OVEST
-	if (dir.y - 1) > 0 {
+	if (dir.y - 1) >= 0 {
 		res = append(res, dir.coordinateSum(coordinate{0, -1}))
 	}
 	// EST
-	if (dir.y + 1) < maxY {
+	if (dir.y + 1) <= maxY {
 		res = append(res, dir.coordinateSum(coordinate{0, 1}))
 
 	}
@@ -84,13 +88,17 @@ type trailHead struct {
 	maxX, maxY int
 }
 
+func (head trailHead) String() string {
+	return fmt.Sprintf("HEAD at coords=%s with value %d\n", head.currentPos, head.currentPosValue)
+}
+
 func findTrailHeads(g grid, maxX, maxY int) []trailHead {
 	tHeads := []trailHead{}
 	for key, value := range g {
 		if value == 0 {
 			newHead := trailHead{
 				currentPos:      key,
-				currentPosValue: 0,
+				currentPosValue: value,
 				maxX:            maxX,
 				maxY:            maxY,
 			}
@@ -100,19 +108,22 @@ func findTrailHeads(g grid, maxX, maxY int) []trailHead {
 	return tHeads
 }
 
-func recursiveTrailExploration(head trailHead, g grid) (topCounter int) {
+func recursiveTrailExploration(head trailHead, g grid, explored map[coordinate]struct{}, useExplored bool) (topCounter int) {
+	if g[head.currentPos] == 9 {
+		return 1
+	}
 	for _, pCoord := range head.currentPos.allPossibleCoordinates(head.maxX, head.maxY) {
+		_, ok := explored[pCoord]
 		pValue := g[pCoord]
-		if pValue == 9 {
-			return 1
-		} else if ((head.currentPosValue - pValue) == 1) || ((head.currentPosValue - pValue) == -1) {
+		if ((pValue - head.currentPosValue) == 1) && (!ok || !useExplored) {
 			newHead := trailHead{
 				currentPos:      pCoord,
 				currentPosValue: pValue,
 				maxX:            head.maxX,
 				maxY:            head.maxY,
 			}
-			topCounter += recursiveTrailExploration(newHead, g)
+			explored[pCoord] = struct{}{}
+			topCounter += recursiveTrailExploration(newHead, g, explored, useExplored)
 		}
 	}
 	return
@@ -121,13 +132,17 @@ func recursiveTrailExploration(head trailHead, g grid) (topCounter int) {
 func starOne(input []string) {
 	start := time.Now()
 
-	maxX, maxY := len(input), len(input[0])
+	maxX, maxY := len(input[0]), len(input)
 	g := parseInputGrid(input)
 	tHeads := findTrailHeads(g, maxX, maxY)
 
 	res := 0
 	for _, head := range tHeads {
-		res += recursiveTrailExploration(head, g)
+		explored := map[coordinate]struct{}{
+			head.currentPos: struct{}{},
+		}
+		tops := recursiveTrailExploration(head, g, explored, true)
+		res += tops
 	}
 	end := time.Now().Sub(start)
 
@@ -135,7 +150,23 @@ func starOne(input []string) {
 }
 
 func starTwo(input []string) {
-	fmt.Printf("Star Two: %d\n")
+	start := time.Now()
+
+	maxX, maxY := len(input[0]), len(input)
+	g := parseInputGrid(input)
+	tHeads := findTrailHeads(g, maxX, maxY)
+
+	res := 0
+	for _, head := range tHeads {
+		explored := map[coordinate]struct{}{
+			head.currentPos: struct{}{},
+		}
+		tops := recursiveTrailExploration(head, g, explored, false)
+		res += tops
+	}
+	end := time.Now().Sub(start)
+
+	fmt.Printf("Star One: %d in %#vs\n", res, end.Seconds())
 }
 
 func main() {
@@ -145,5 +176,5 @@ func main() {
 	input := parseInputFile(filename)
 
 	starOne(input)
-	// starTwo(input)
+	starTwo(input)
 }
