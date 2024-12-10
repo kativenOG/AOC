@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"regexp"
 	"time"
@@ -12,6 +11,20 @@ import (
 
 type coordinate struct {
 	x, y int
+}
+
+func (pos coordinate) coordinateSum(secondCoordinate coordinate) (newCoordinate coordinate) {
+	return coordinate{
+		pos.x + secondCoordinate.x,
+		pos.y + secondCoordinate.y,
+	}
+}
+
+func (pos coordinate) equal(otherPos coordinate) (res bool) {
+	if (pos.x == otherPos.x) && (pos.y == otherPos.y) {
+		res = true
+	}
+	return
 }
 
 // Obstacles
@@ -40,13 +53,6 @@ func parseInputGrid(input []string) (g grid) {
 		}
 	}
 	return
-}
-
-func (pos coordinate) coordinateSum(secondCoordinate coordinate) (newCoordinate coordinate) {
-	return coordinate{
-		pos.x + secondCoordinate.x,
-		pos.y + secondCoordinate.y,
-	}
 }
 
 // Obstacles
@@ -147,7 +153,7 @@ func newMuseumEnv(input []string) *museumEnv {
 	return mEnv
 }
 
-func (mEnv *museumEnv) step() (done bool) {
+func (mEnv *museumEnv) step() (done bool, hit) {
 	// First check if the next position is an obstacle
 	possibleNewPos := mEnv.museumGuard.position.coordinateSum(mEnv.museumGuard.direction.moveOneStep())
 	if (possibleNewPos.x > mEnv.maxX) || (possibleNewPos.y > mEnv.maxY) ||
@@ -172,6 +178,24 @@ func (mEnv *museumEnv) step() (done bool) {
 	return
 }
 
+func (mEnv museumEnv) isInfiniteLoop() (res bool) {
+	startPosition := mEnv.museumGuard.position
+	var (
+		done, hit bool
+		hits  int
+	)
+	for true {
+		done, hit = mEnv.step()
+		hits += hit
+		if hits>4 || done{
+			break	
+		} else if startPosition.equal(mEnv.museumGuard.position) {
+			res = true
+			break
+		}
+	}
+	return
+}
 func starOne(input []string) {
 	done := false
 	mEnv := newMuseumEnv(input)
