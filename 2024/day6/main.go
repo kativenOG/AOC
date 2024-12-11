@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/AOC/2024/utils"
@@ -79,6 +81,20 @@ func (dir direction) toTheRight() direction {
 	panic(fmt.Sprint("Unsupported direction for turning %d", dir))
 }
 
+func (dir direction) toTheLeft() direction {
+	switch dir {
+	case SUD:
+		return EST
+	case OVEST:
+		return SUD
+	case EST:
+		return NORD
+	case NORD:
+		return OVEST
+	}
+	panic(fmt.Sprint("Unsupported direction for turning %d", dir))
+}
+
 func (dir direction) moveOneStep() coordinate {
 	switch dir {
 	case NORD:
@@ -96,6 +112,17 @@ func (dir direction) moveOneStep() coordinate {
 type guard struct {
 	position  coordinate
 	direction direction
+}
+
+func (g guard) String() string {
+	return fmt.Sprintf("%d, %d, %d", g.position.x, g.position.y, g.direction)
+}
+
+func (g *guard) copy() guard {
+	return guard{
+		position:  g.position,
+		direction: g.direction,
+	}
 }
 
 func parseOneGuard(input []string) *guard {
@@ -132,6 +159,24 @@ type museumEnv struct {
 	visited     map[coordinate]struct{} // Star One
 }
 
+func (mEnv *museumEnv) clone() museumEnv {
+	var (
+		newGuard   = mEnv.museumGuard.copy()
+		newVisited = make(map[coordinate]struct{})
+	)
+
+	maps.Copy(newVisited, mEnv.visited)
+
+	return museumEnv{
+		museumGuard: &newGuard,
+		museumGrid:  mEnv.museumGrid,
+		visited:     newVisited,
+		maxX:        mEnv.maxX,
+		maxY:        mEnv.maxY,
+	}
+
+}
+
 func newMuseumEnv(input []string) *museumEnv {
 	g := parseInputGrid(input)
 	maxX := lo.Max(lo.Map(lo.Keys(g), func(coord coordinate, _ int) int {
@@ -153,7 +198,7 @@ func newMuseumEnv(input []string) *museumEnv {
 	return mEnv
 }
 
-func (mEnv *museumEnv) step() (done bool, hit) {
+func (mEnv *museumEnv) step() (done bool, hit int) {
 	// First check if the next position is an obstacle
 	possibleNewPos := mEnv.museumGuard.position.coordinateSum(mEnv.museumGuard.direction.moveOneStep())
 	if (possibleNewPos.x > mEnv.maxX) || (possibleNewPos.y > mEnv.maxY) ||
@@ -168,6 +213,7 @@ func (mEnv *museumEnv) step() (done bool, hit) {
 		newPos := mEnv.museumGuard.position.coordinateSum(mEnv.museumGuard.direction.moveOneStep())
 		mEnv.museumGuard.position = newPos
 		mEnv.visited[newPos] = struct{}{}
+		hit = 1
 
 	// JUST UPDATE IF THE POSITION IS FREE
 	case FREE:
@@ -181,14 +227,14 @@ func (mEnv *museumEnv) step() (done bool, hit) {
 func (mEnv museumEnv) isInfiniteLoop() (res bool) {
 	startPosition := mEnv.museumGuard.position
 	var (
-		done, hit bool
-		hits  int
+		done      bool
+		hit, hits int
 	)
 	for true {
 		done, hit = mEnv.step()
 		hits += hit
-		if hits>4 || done{
-			break	
+		if hits > 4 || done {
+			break
 		} else if startPosition.equal(mEnv.museumGuard.position) {
 			res = true
 			break
@@ -198,11 +244,12 @@ func (mEnv museumEnv) isInfiniteLoop() (res bool) {
 }
 
 func starOne(input []string) {
+	start := time.Now()
+
 	done := false
 	mEnv := newMuseumEnv(input)
-	start := time.Now()
 	for !done {
-		done = mEnv.step()
+		done, _ = mEnv.step()
 	}
 	end := time.Now().Sub(start)
 
@@ -212,11 +259,64 @@ func starOne(input []string) {
 // TODO: you have to run a isInfiniteLoop() for 2 grid configurations each step:
 // - Obstacle to the left (of the direction)
 // - Obstacle in front (of the direction)
-// NB: 
-// 	- You have to run the loop only once for guard struct unique value (use string as identifier).
-//  - Only report once the loop for each coordinate (use mutex on map of coords and then count the values).
+// NB:
+//   - You have to run the loop only once for guard struct unique value (use string as identifier).
+//   - Only report once the loop for each coordinate (use mutex on map of coords and then count the values).
 func starTwo(input []string) {
-	fmt.Printf("Star Two: %d\n")
+
+	var (
+		start = time.Now()
+
+		done bool
+		mEnv = newMuseumEnv(input)
+
+		mx          sync.Mutex
+		wg          sync.WaitGroup
+		haveLoop    = make(map[coordinate]struct{})
+		haveVisited = make(map[string]struct{})
+	)
+
+	for !done {
+		done, _ = mEnv.step()
+		if _, ok := haveVisited[mEnv.museumGuard.String()]; !ok {
+			wg.Add(2)
+
+			clonedEnvTop := mEnv.clone()
+			topGuard := mEnv.museumGuard.copy()
+			topGuard.position = topGuard.position.coordinateSum(topGuard.direction.moveOneStep())
+			haveVisited[topGuard.String()] = struct{}{}
+			go func() {
+				defer wg.Done()
+
+				if isInfinite := clonedEnvTop.isInfiniteLoop(); isInfinite {
+					mx.Lock()
+					haveLoop[clonedEnvTop.museumGuard.position] = struct{}{}
+					mx.Unlock()
+				}
+			}()
+
+			clonedEnvLeft := mEnv.clone()
+			leftGuard := mEnv.museumGuard.copy()
+			leftGuard.direction = leftGuard.direction.toTheLeft()
+			leftGuard.position = leftGuard.position.coordinateSum(leftGuard.direction.moveOneStep())
+			haveVisited[leftGuard.String()] = struct{}{}
+			go func() {
+				defer wg.Done()
+
+				if isInfinite := clonedEnvLeft.isInfiniteLoop(); isInfinite {
+					mx.Lock()
+					haveLoop[clonedEnvLeft.museumGuard.position] = struct{}{}
+					mx.Unlock()
+				}
+			}()
+		}
+
+	}
+
+	wg.Wait()
+	end := time.Now().Sub(start)
+
+	fmt.Printf("Star Two: %d in %#vs\n", len(lo.Keys(haveLoop)), end.Seconds())
 }
 
 func main() {
@@ -224,5 +324,5 @@ func main() {
 	input := utils.ParseInputFile(filename)
 
 	starOne(input)
-	// starTwo(input)
+	starTwo(input)
 }

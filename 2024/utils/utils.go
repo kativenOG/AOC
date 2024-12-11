@@ -13,6 +13,11 @@ func DieOnError(err error) {
 	}
 }
 
+func PrintAndDie(val interface{}) {
+	fmt.Sprintf("%#v", val)
+	DieOnError(fmt.Errorf("DEBUGGING"))
+}
+
 func DebugPrintf(shouldDebug bool, args ...interface{}) {
 	if !shouldDebug {
 		return
