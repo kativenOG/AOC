@@ -196,6 +196,7 @@ func (mEnv museumEnv) isInfiniteLoop() (res bool) {
 	}
 	return
 }
+
 func starOne(input []string) {
 	done := false
 	mEnv := newMuseumEnv(input)
@@ -208,6 +209,12 @@ func starOne(input []string) {
 	fmt.Printf("Star One: %d in %#vs\n", len(lo.Keys(mEnv.visited)), end.Seconds())
 }
 
+// TODO: you have to run a isInfiniteLoop() for 2 grid configurations each step:
+// - Obstacle to the left (of the direction)
+// - Obstacle in front (of the direction)
+// NB: 
+// 	- You have to run the loop only once for guard struct unique value (use string as identifier).
+//  - Only report once the loop for each coordinate (use mutex on map of coords and then count the values).
 func starTwo(input []string) {
 	fmt.Printf("Star Two: %d\n")
 }
