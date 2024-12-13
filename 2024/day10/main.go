@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+type grid map[coordinate]int
+
 type coordinate struct {
 	x, y int
 }
@@ -22,13 +24,11 @@ func (pos coordinate) coordinateSum(secondCoordinate coordinate) (newCoordinate 
 	}
 }
 
-type grid map[coordinate]int
-
 func (g grid) CoorValueString(coor coordinate) string {
 	return fmt.Sprintf("Coordinate: %s, Value: %d", coor, g[coor])
 }
 
-func parseInputGrid(input []string) (g grid) {
+func parseIntegerInputGrid(input []string) (g grid) {
 	g = make(map[coordinate]int)
 	for x, line := range input {
 		runeLine := []rune(line)
@@ -115,7 +115,7 @@ func starOne(input []string) {
 	start := time.Now()
 
 	maxX, maxY := len(input[0]), len(input)
-	g := parseInputGrid(input)
+	g := parseIntegerInputGrid(input)
 	tHeads := findTrailHeads(g, maxX, maxY)
 
 	res := 0
@@ -135,7 +135,7 @@ func starTwo(input []string) {
 	start := time.Now()
 
 	maxX, maxY := len(input[0]), len(input)
-	g := parseInputGrid(input)
+	g := parseIntegerInputGrid(input)
 	tHeads := findTrailHeads(g, maxX, maxY)
 
 	res := 0
