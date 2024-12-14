@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/AOC/2024/utils"
@@ -91,6 +92,57 @@ func (g grid) fenceCost(currentPlantation map[coordinate]struct{}, plantType str
 	return area * perimeter
 }
 
+func parseNonSequentialCoords(coorArr []coordinate) []coordinate {
+	if len(coorArr) == 0 {
+		return coorArr
+	}
+
+	// Get the axis
+	var sameYaxis bool
+	if coorArr[0].y == coorArr[0].y {
+		sameYaxis = true
+	}
+
+	newCoorArr := make([]coordinate, 0, len(coorArr))
+	slices.SortFunc(coorArr, func(a, b coordinate) int {
+		valA, valB := a.y, b.y
+		if sameYaxis {
+			valA, valB = a.x, b.x
+		}
+
+		if valA == valB {
+			return 0
+		}
+		if valA > valB {
+			return 1
+		}
+		return -1
+	})
+
+	var previousVal int
+	for i, coor := range coorArr {
+		newVal := coor.y
+		if sameYaxis {
+			newVal = coor.x
+		}
+
+		if i == 0 {
+			newCoorArr = append(newCoorArr, coor)
+			previousVal = newVal
+			continue
+		}
+
+		if (previousVal + 1) != newVal {
+			break
+		}
+
+		newCoorArr = append(newCoorArr, coor)
+		previousVal = newVal
+	}
+
+	return newCoorArr
+}
+
 func (g grid) discountedFenceCost(currentPlantation map[coordinate]struct{}, plantType string) (res int) {
 
 	var (
@@ -142,6 +194,7 @@ func (g grid) discountedFenceCost(currentPlantation map[coordinate]struct{}, pla
 
 		if len(sameCoords) > 0 {
 			sides += 1
+			sameCoords = parseNonSequentialCoords(sameCoords)
 			lo.ForEach(sameCoords, func(coord coordinate, _ int) {
 				visitedCounter[coord] -= 1
 			})
