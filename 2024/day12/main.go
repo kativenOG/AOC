@@ -59,6 +59,17 @@ func (g grid) validNeighbours(coord coordinate, targetVal string) (neighbours []
 	return
 }
 
+func (g grid) nonValidNeighbours(coord coordinate, targetVal string) (neighbours []coordinate) {
+	var newPos coordinate
+	for _, dir := range directions {
+		newPos = coord.coordinateSum(dir)
+		if coordVal, ok := g[newPos]; ok && coordVal != targetVal {
+			neighbours = append(neighbours, newPos)
+		}
+	}
+	return
+}
+
 func (g grid) findPlantation(startCoord coordinate, currentPlantation map[coordinate]struct{}) (plants []coordinate) {
 	plantType := g[startCoord]
 	neighbours := g.validNeighbours(startCoord, plantType)
@@ -80,7 +91,67 @@ func (g grid) fenceCost(currentPlantation map[coordinate]struct{}, plantType str
 	return area * perimeter
 }
 
-func starOne(input []string) {
+func (g grid) discountedFenceCost(currentPlantation map[coordinate]struct{}, plantType string) (res int) {
+
+	var (
+		sides = 0
+		area  = len(lo.Keys(currentPlantation))
+	)
+
+	visitedCounter := make(map[coordinate]int)
+	lo.ForEach(lo.Keys(currentPlantation), func(coor coordinate, _ int) {
+		nodes := g.nonValidNeighbours(coor, plantType)
+		lo.ForEach(nodes, func(coor coordinate, _ int) {
+			visitedCounter[coor] += 1
+		})
+	})
+	outerNeighbours := lo.Keys(visitedCounter)
+
+	var (
+		targetSide coordinate
+	)
+
+	for lo.Sum(lo.Values(visitedCounter)) != 0 {
+		var found bool
+		for _, possibleTarget := range outerNeighbours {
+			if val := visitedCounter[possibleTarget]; val > 0 {
+				targetSide = possibleTarget
+				found = true
+				break
+			}
+		}
+		if !found {
+			utils.DieOnError(fmt.Errorf("wtf man, should've already exited"))
+		}
+
+		sameCoords := lo.Filter(outerNeighbours, func(coor coordinate, _ int) bool {
+			if val := visitedCounter[coor]; val == 0 {
+				return false
+			}
+			return targetSide.x == coor.x
+		})
+
+		if len(sameCoords) == 0 {
+			sameCoords = lo.Filter(outerNeighbours, func(coor coordinate, _ int) bool {
+				if val := visitedCounter[coor]; val == 0 {
+					return false
+				}
+				return targetSide.y == coor.y
+			})
+		}
+
+		if len(sameCoords) > 0 {
+			sides += 1
+			lo.ForEach(sameCoords, func(coord coordinate, _ int) {
+				visitedCounter[coord] -= 1
+			})
+		}
+	}
+
+	return area * sides
+}
+
+func starOne(input []string, discount bool) {
 	start := time.Now()
 
 	var (
@@ -118,26 +189,30 @@ func starOne(input []string) {
 		visited += len(lo.Keys(currentPlantation))
 
 		// Calculate fence cost
-		res += g.fenceCost(currentPlantation, plantType)
+		if discount {
+			res += g.discountedFenceCost(currentPlantation, plantType)
+		} else {
+			res += g.fenceCost(currentPlantation, plantType)
+		}
 
 	}
 
 	end := time.Now().Sub(start)
-	fmt.Printf("Star One: %d in %#vs\n", res, end.Seconds())
+	if !discount {
+		fmt.Printf("Star One: %d in %#vs\n", res, end.Seconds())
+	} else {
+		fmt.Printf("Star Two: %d in %#vs\n", res, end.Seconds())
+	}
 }
 
 func starTwo(input []string) {
-	start := time.Now()
-
-	res := 0 // FIX
-	end := time.Now().Sub(start)
-	fmt.Printf("Star Two: %d in %#vs\n", res, end.Seconds())
+	starOne(input, true)
 }
 
 func main() {
 	filename, _ := utils.ParseFlags()
 	input := utils.ParseInputFile(filename)
 
-	starOne(input)
+	starOne(input, false)
 	starTwo(input)
 }
