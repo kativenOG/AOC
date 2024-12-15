@@ -12,31 +12,33 @@ import (
 func (g grid) moveBigBox(pos, dir coordinate) {
 	switch tile := g[pos]; tile {
 	case BIG_BLOCK_LEFT:
-		otherPos := pos.coordinateSum(coordinate{1, 0})
+		otherPos := pos.coordinateSum(coordinate{0, 1})
 		g[pos], g[otherPos] = EMPTY, EMPTY
 		g[pos.coordinateSum(dir)] = BIG_BLOCK_LEFT
 		g[otherPos.coordinateSum(dir)] = BIG_BLOCK_RIGHT
 	case BIG_BLOCK_RIGHT:
-		otherPos := pos.coordinateSum(coordinate{-1, 0})
+		otherPos := pos.coordinateSum(coordinate{0, -1})
 		g[pos], g[otherPos] = EMPTY, EMPTY
 		g[pos.coordinateSum(dir)] = BIG_BLOCK_RIGHT
 		g[otherPos.coordinateSum(dir)] = BIG_BLOCK_LEFT
 	default:
-		panic("in grid.moveBigBox trying to move a tile that is not a box")
+		panic(fmt.Sprintf("in grid.moveBigBox trying to move a tile that is not a box: %s", reverseParseTile(tile)))
 	}
 }
 
-func (g grid) getBigBox(pos coordinate) []coordinate {
+func (g grid) getBigBox(pos coordinate) (res []coordinate) {
 	var otherPos coordinate
 	switch tile := g[pos]; tile {
 	case BIG_BLOCK_LEFT:
-		otherPos = pos.coordinateSum(coordinate{1, 0})
+		otherPos = pos.coordinateSum(coordinate{0, 1})
+		res = append(res, pos, otherPos)
 	case BIG_BLOCK_RIGHT:
-		otherPos = pos.coordinateSum(coordinate{-1, 0})
+		otherPos = pos.coordinateSum(coordinate{0, -1})
+		res = append(res, otherPos, pos)
 	default:
 		panic("in grid.getBigBox trying to get a parse a tile that is not a box")
 	}
-	return []coordinate{pos, otherPos}
+	return
 }
 
 func (coor coordinate) isDirectionHorizzontal() (res bool) {
@@ -49,24 +51,27 @@ func (coor coordinate) isDirectionHorizzontal() (res bool) {
 func (wh warehouse) canMoveVertically(startPos, dir coordinate, visitedBoxesSet map[coordinate]struct{}) (res bool) {
 	res = true
 	if dir.y != 0 {
-		panic("this is an horizzontal movement")
+		panic(fmt.Sprintf("%s this should be a vertical movement", dir))
 	}
 
 	switch newPos := startPos.coordinateSum(dir); wh.g[newPos] {
 	case BIG_BLOCK_LEFT, BIG_BLOCK_RIGHT:
 		bigBox := wh.g.getBigBox(newPos)
+		for _, boxDir := range bigBox {
+			if _, ok := visitedBoxesSet[boxDir]; !ok {
+				res = wh.canMoveVertically(boxDir, dir, visitedBoxesSet)
+				if !res {
+					break
+				}
+			}
+		}
 		lo.ForEach(bigBox, func(coor coordinate, _ int) {
 			visitedBoxesSet[coor] = struct{}{}
 		})
-		for _, boxDir := range bigBox {
-			res = wh.canMoveVertically(boxDir, dir, visitedBoxesSet)
-			if !res {
-				break
-			}
-		}
 	case WALL:
-		res = false
+		return false
 	case EMPTY:
+		return true
 	}
 
 	return
@@ -101,7 +106,7 @@ func (wh *warehouse) moveBigBoxes(input string) {
 		var foundEmpty bool
 		if dir.isDirectionHorizzontal() {
 			cratePositions := []coordinate{newRobotPos}
-			for newCratePos := newRobotPos.coordinateSum(dir); wh.g[newCratePos] == BLOCK || wh.g[newCratePos] == EMPTY; newCratePos = newCratePos.coordinateSum(dir) {
+			for newCratePos := newRobotPos.coordinateSum(coordinate{dir.x, dir.y * 2}); wh.g[newCratePos] == BLOCK || wh.g[newCratePos] == EMPTY; newCratePos = newCratePos.coordinateSum(coordinate{dir.x, dir.y * 2}) {
 				if wh.g[newCratePos] == EMPTY {
 					foundEmpty = true
 					break
@@ -113,34 +118,48 @@ func (wh *warehouse) moveBigBoxes(input string) {
 				return
 			}
 
-			lo.ForEach(lo.Reverse(lo.Filter(cratePositions,
-				func(coor coordinate, _ int) bool {
-					return (wh.g[coor] == BIG_BLOCK_LEFT)
-				}),
-			), func(pos coordinate, _ int) {
-				wh.g.moveBigBox(pos, dir)
-			})
+			// Create unique box set:
+			singleBoxArray := lo.SliceToMap(
+				lo.Map(cratePositions,
+					func(coor coordinate, _ int) coordinate {
+						return wh.g.getBigBox(coor)[0]
+					},
+				),
+				func(coor coordinate) (val coordinate, appo struct{}) {
+					return coor, struct{}{}
+				},
+			)
+			lo.ForEach(lo.Reverse(lo.Keys(singleBoxArray)),
+				func(pos coordinate, _ int) {
+					wh.g.moveBigBox(pos, dir)
+				},
+			)
 		} else {
 			haveVisitedBoxes := make(map[coordinate]struct{})
 			if res := wh.canMoveVertically(wh.robot, dir, haveVisitedBoxes); res {
+				fmt.Println(haveVisitedBoxes)
 				targets := lo.Filter(lo.Keys(haveVisitedBoxes), func(coor coordinate, _ int) bool {
-					return true
+					return wh.g[coor] == BIG_BLOCK_LEFT
 				})
+
 				// Move every box only once and sort them so they
 				// do not override each other while updating positions.
 				slices.SortFunc(targets, func(a, b coordinate) int {
 					if a.x == b.x {
 						return 0
 					} else if a.x > b.x {
-
-						return 1 * dir.x
+						return -1 * dir.x
 					}
-					return -1 * dir.x
+					return 1 * dir.x
 				})
 				lo.ForEach(targets, func(coor coordinate, _ int) {
+					fmt.Println(coor)
 					wh.g.moveBigBox(coor, dir)
 				})
+			} else {
+				return
 			}
+
 		}
 
 		// Always

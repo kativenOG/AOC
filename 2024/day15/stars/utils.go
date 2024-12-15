@@ -88,7 +88,7 @@ func (wh warehouse) visualize(currentAction string) {
 	maxY := lo.Max(lo.Map(lo.Keys(wh.g), func(coor coordinate, _ int) int {
 		return coor.y
 	}))
-	utils.CleanTerminal(maxY)
+	utils.CleanTerminal(maxY + 1)
 	for x := range lo.Range(maxX + 1) {
 		for y := range lo.Range(maxY + 1) {
 			fmt.Printf(reverseParseTile(wh.g[coordinate{x, y}]))
