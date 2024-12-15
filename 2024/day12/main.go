@@ -201,6 +201,7 @@ func (g grid) discountedFenceCost(currentPlantation map[coordinate]struct{}, pla
 		}
 	}
 
+	fmt.Printf("%d - %d\n", area, sides)
 	return area * sides
 }
 

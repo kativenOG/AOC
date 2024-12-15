@@ -14,7 +14,7 @@ func DieOnError(err error) {
 }
 
 func PrintAndDie(val interface{}) {
-	fmt.Sprintf("%#v", val)
+	fmt.Printf("%#v\n", val)
 	DieOnError(fmt.Errorf("DEBUGGING"))
 }
 
