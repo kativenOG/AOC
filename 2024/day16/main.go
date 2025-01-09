@@ -210,7 +210,7 @@ func StarOne(input []string) {
 
 	// Result:
 	fmt.Println(fmt.Sprintf("Start: %s", startState.Identifier()))
-	fmt.Println(fmt.Sprintf("Start: %s", startState.Identifier()))
+	fmt.Println(fmt.Sprintf("End: %s", end.Identifier()))
 
 	frontier := createFrontier(startState)
 	bestCostsMap := make(map[coordinate]int)
