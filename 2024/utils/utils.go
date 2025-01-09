@@ -49,3 +49,9 @@ func ParseFlags() (filename string, debug bool) {
 	flag.Parse()
 	return
 }
+
+func CleanTerminal(maxY int) {
+	for range maxY + 1 {
+		fmt.Printf("\r\033[K\033[1A")
+	}
+}

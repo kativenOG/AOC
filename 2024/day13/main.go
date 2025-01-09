@@ -36,7 +36,7 @@ func returnCoord(match []string) coordinate {
 	return coordinate{x, y}
 }
 
-func parseClawMachines(input []string, conversion int) (clawMachines []clawMachine) {
+func parseClawMachines(input []string) (clawMachines []clawMachine) {
 	var (
 		matches                    [][]string
 		buttonAs, buttonBs, prizes []coordinate
@@ -52,8 +52,6 @@ func parseClawMachines(input []string, conversion int) (clawMachines []clawMachi
 			buttonBs = append(buttonBs, returnCoord(matches[0]))
 		} else if matches = rPrize.FindAllStringSubmatch(line, -1); len(matches) > 0 {
 			coord := returnCoord(matches[0])
-			coord.x += conversion
-			coord.y += conversion
 			prizes = append(prizes, coord)
 		}
 	}
@@ -67,12 +65,12 @@ func parseClawMachines(input []string, conversion int) (clawMachines []clawMachi
 	})
 }
 
-func starOne(input []string, rightConversion int) {
+func starOne(input []string) {
 	var (
 		res   int
 		start = time.Now()
 
-		clawMachines             = parseClawMachines(input, rightConversion)
+		clawMachines             = parseClawMachines(input)
 		buttonA, buttonB, prize  coordinate
 		currentValX, currentValY int
 		innerX, innerY           int
@@ -102,21 +100,44 @@ clawMachineLoop:
 	}
 	end := time.Now().Sub(start)
 
-	if rightConversion == 0 {
-		fmt.Printf("Star One: %d in %fs\n", res, end.Seconds())
-	} else {
-		fmt.Printf("Star Two: %d in %fs\n", res, end.Seconds())
-	}
+	fmt.Printf("Star One: %d in %fs\n", res, end.Seconds())
 }
 
 func starTwo(input []string) {
-	starOne(input, 10000000000000)
+	var (
+		start                   = time.Now()
+		res                     int
+		buttonA, buttonB, prize coordinate
+	)
+	clawMachines := parseClawMachines(input)
+	for _, cm := range clawMachines {
+		buttonA, buttonB, prize = cm.buttonA, cm.buttonB, cm.prize
+		prize.x += 10000000000000
+		prize.y += 10000000000000
+
+		// First get the B
+		nb := ((prize.y * buttonA.x) - (prize.x * buttonA.y))
+		db := ((buttonA.x * buttonB.y) - (buttonB.x * buttonA.y))
+
+		// Check if are divisible
+		if nb%db == 0 {
+			b := nb / db
+			if na, da := (prize.x - (b * buttonB.x)), buttonA.x; na%da == 0 {
+				a := (na / da)
+				res += a*3 + b
+			}
+		}
+	}
+
+	end := time.Now().Sub(start).Seconds()
+	fmt.Printf("Star Two: %d in %fs\n", res, end)
+
 }
 
 func main() {
 	filename, _ := utils.ParseFlags()
 	input := utils.ParseInputFile(filename)
 
-	starOne(input, 0)
+	starOne(input)
 	starTwo(input)
 }

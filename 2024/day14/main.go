@@ -104,7 +104,6 @@ func printRobots(robotPos map[coordinate]struct{}, maxX, maxY int, file *os.File
 		// Return
 		if file != nil {
 			_, err = file.Write([]byte("\n"))
-			utils.DieOnError(err)
 		} else {
 			fmt.Printf("\n")
 		}
@@ -112,13 +111,6 @@ func printRobots(robotPos map[coordinate]struct{}, maxX, maxY int, file *os.File
 
 	// Write to file
 	_, err = file.Write([]byte("\n"))
-	utils.DieOnError(err)
-}
-
-func cleanTerminal(maxY int) {
-	for range maxY * 2 {
-		fmt.Printf("\r\033[K\033[1A")
-	}
 }
 
 func cycleTroughVisualizations(robots []robot, maxX, maxY int) (res int) {
@@ -136,7 +128,7 @@ func cycleTroughVisualizations(robots []robot, maxX, maxY int) (res int) {
 
 		fmt.Printf("Current: %d", res)
 		time.Sleep(500 * time.Millisecond)
-		cleanTerminal(maxY)
+		utils.CleanTerminal(maxY)
 	}
 
 	return res
@@ -223,6 +215,6 @@ func main() {
 	filename, _ := utils.ParseFlags()
 	input := utils.ParseInputFile(filename)
 
-	// starOne(input, 100, 101, 103)
+	starOne(input, 100, 101, 103)
 	starTwo(input, 101, 103)
 }
