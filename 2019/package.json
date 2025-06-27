@@ -1,0 +1,19 @@
+{
+  "name": "2019",
+  "version": "1.0.0",
+  "description": "AOC for the year 2019",
+  "keywords": [
+    "aoc"
+  ],
+  "license": "MIT",
+  "author": "kativen",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "day": " bash runday.sh"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}
