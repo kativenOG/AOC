@@ -1,8 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
-        {
-            "name": "Debug Day3",
+        { "name": "Debug Day 3",
             "type": "node",
             "request": "launch",
             "skipFiles": [
@@ -11,6 +10,30 @@
             "program": "${workspaceFolder}/3/day3.js",
             "env": {
                 "AOC_DAY": "3",
+            }
+        },
+        {
+            "name": "Debug Day 4",
+            "type": "node",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/4/day4.js",
+            "env": {
+                "AOC_DAY": "4",
+            }
+        }
+        {
+            "name": "Debug Day 5",
+            "type": "node",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/5/day5.js",
+            "env": {
+                "AOC_DAY": "5",
             }
         }
     ]

@@ -1,7 +1,16 @@
 import { readFileSync } from "node:fs"
 import { argv } from "node:process"
+import readline from "node:readline"
+import {stdin, stdout} from "node:process"
 
+export var supportNegativeIndexes = (val, arr) => (val < 0 ) ? arr.length - val : val;
 
+export async function askForInput(questionText)  {
+    let rl = readline.createInterface(stdin, stdout),
+        res = await Promise((resolve)=>rl.question(questionText, resolve));
+    rl.close()
+    return res
+}
 export function fileContent(filepath){
     let content = readFileSync(filepath);
     let lines = content.toString().split("\n");
@@ -17,4 +26,3 @@ export function inputFileName(){
     }
     return `${process.env.AOC_DAY}/input.txt`
 }
-
