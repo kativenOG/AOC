@@ -6,8 +6,9 @@ import {stdin, stdout} from "node:process"
 export var supportNegativeIndexes = (val, arr) => (val < 0 ) ? arr.length - val : val;
 
 export async function askForInput(questionText)  {
+    console.log(questionText)
     let rl = readline.createInterface(stdin, stdout),
-        res = await Promise((resolve)=>rl.question(questionText, resolve));
+        res = await new Promise((resolve)=>rl.question("", resolve));
     rl.close()
     return res
 }

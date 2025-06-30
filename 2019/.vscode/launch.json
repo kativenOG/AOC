@@ -23,7 +23,7 @@
             "env": {
                 "AOC_DAY": "4",
             }
-        }
+        },
         {
             "name": "Debug Day 5",
             "type": "node",
@@ -31,6 +31,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
+            "console": "integratedTerminal",
             "program": "${workspaceFolder}/5/day5.js",
             "env": {
                 "AOC_DAY": "5",

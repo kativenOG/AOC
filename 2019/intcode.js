@@ -1,4 +1,3 @@
-
 import { supportNegativeIndexes, askForInput } from "./utils.js"
 import _ from "lodash"
 
@@ -14,7 +13,7 @@ var integerToMode = {
 };
 
 
-// Worst errors immaginable when forgetting the generator * in the declaration lol 
+// Node has the error messages immaginable when forgetting the * in the declaration for a generator function lol 
 export default async function* intcodeVM(memory){ 
     let commandLen = 0;
     for (let pointer=0; pointer< memory.length; pointer+=commandLen){
@@ -26,7 +25,7 @@ export default async function* intcodeVM(memory){
             pointerC = supportNegativeIndexes(pointer+3),
             firstParam = (integerToMode[modes[2]]==Modes.POSITION) ? memory[supportNegativeIndexes(memory[pointerA])] : memory[pointerA],
             secondParam = (integerToMode[modes[1]]==Modes.POSITION) ? memory[supportNegativeIndexes(memory[pointerB])] : memory[pointerB],
-            thirdParam = (integerToMode[modes[0]]==Modes.POSITION) ? memory[supportNegativeIndexes(pointerC)] : supportNegativeIndexes(pointerC),
+            thirdParam = (integerToMode[modes[0]]==Modes.POSITION) ? memory[supportNegativeIndexes(pointerC)] : pointerC,
             opCode = parseInt(_.sum(modes.slice(3)));
         switch (opCode) {
             case 1: // ADD
@@ -40,20 +39,34 @@ export default async function* intcodeVM(memory){
             case 3: // INPUT
                 commandLen = 2
                 let inputVal = 0
-                while (true) {
-                    try{
-                        let res = await askForInput("Input: ");
-                        inputVal = parseInt(res);
-                        break;
-                    }catch(e){
-                        console.error( "intcode VM only supports integers, retry");
-                    }
+                try{
+                    let res = await askForInput("Input: ");
+                    inputVal = parseInt(res);
+                    break;
+                }catch(e){
+                    console.error( "intcode VM only supports integers, retry", e);
                 }
-                memory[firstParam] = inputVal
+                memory[memory[pointerA]] = inputVal
                 break;
             case 4: // OUTPUT
                 commandLen = 2
-                yield memory[firstParam];
+                yield memory[memory[pointerA]];
+                break;
+            case 5: // JUMP IF 
+                if (firstParam!=0) pointer= secondParam;
+                commandLen = (firstParam!=0) ?  0 : 2;
+                break;
+            case 6: // JUMP IF NOT 
+                if (firstParam==0) pointer= secondParam;
+                commandLen = (firstParam==0) ?  0 : 2;
+                break;
+            case 7: // LESS THAN 
+                commandLen = 4;
+                memory[memory[pointerC]] = (firstParam<secondParam) ? 1 : 0;
+                break;
+            case 7: // EQUAL
+                commandLen = 4;
+                memory[memory[pointerC]] = (firstParam==secondParam) ? 1 : 0;
                 break;
             case 99: // EXIT
                 commandLen = 1
