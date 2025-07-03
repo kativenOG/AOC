@@ -19,20 +19,20 @@ export default async function* intcodeVM(memory) {
     let modes = memory[pointer].toString().split("");
 
     _.map(_.range(5 - modes.length), () => (modes = ["0"].concat(...modes)));
-    let pointerA = supportNegativeIndexes(pointer + 1),
-      pointerB = supportNegativeIndexes(pointer + 2),
-      pointerC = supportNegativeIndexes(pointer + 3),
+    let pointerA = supportNegativeIndexes(pointer + 1, memory),
+      pointerB = supportNegativeIndexes(pointer + 2, memory),
+      pointerC = supportNegativeIndexes(pointer + 3, memory),
       firstParam =
         integerToMode[modes[2]] == Modes.POSITION
-          ? memory[supportNegativeIndexes(memory[pointerA])]
+          ? memory[supportNegativeIndexes(memory[pointerA], memory)]
           : memory[pointerA],
       secondParam =
         integerToMode[modes[1]] == Modes.POSITION
-          ? memory[supportNegativeIndexes(memory[pointerB])]
+          ? memory[supportNegativeIndexes(memory[pointerB], memory)]
           : memory[pointerB],
       thirdParam =
         integerToMode[modes[0]] == Modes.POSITION
-          ? memory[supportNegativeIndexes(pointerC)]
+          ? memory[supportNegativeIndexes(pointerC, memory)]
           : pointerC,
       opCode = parseInt(_.sum(modes.slice(3)));
     switch (opCode) {
@@ -61,19 +61,19 @@ export default async function* intcodeVM(memory) {
         yield memory[memory[pointerA]];
         break;
       case 5: // JUMP IF
-        if (firstParam != 0) pointer = secondParam;
-        commandLen = firstParam != 0 ? 0 : 2;
+        if (firstParam != 0) pointer = supportNegativeIndexes(secondParam, memory);
+        commandLen = (firstParam != 0) ? 0 : 3;
         break;
       case 6: // JUMP IF NOT
-        if (firstParam == 0) pointer = secondParam;
-        commandLen = firstParam == 0 ? 0 : 2;
+        if (firstParam == 0) pointer = supportNegativeIndexes(secondParam, memory);
+        commandLen = (firstParam == 0) ? 0 : 3;
         break;
       case 7: // LESS THAN
-        commandLen = 4;
+        commandLen = 3;
         memory[memory[pointerC]] = firstParam < secondParam ? 1 : 0;
         break;
-      case 7: // EQUAL
-        commandLen = 4;
+      case 8: // EQUAL
+        commandLen = 3;
         memory[memory[pointerC]] = firstParam == secondParam ? 1 : 0;
         break;
       case 99: // EXIT

@@ -4,7 +4,7 @@ import readline from "node:readline";
 import { stdin, stdout } from "node:process";
 
 export var supportNegativeIndexes = (val, arr) =>
-  val < 0 ? arr.length - val : val;
+  (val > arr.length) ? val%arr.length : (val < 0) ? arr.length - val : val;
 
 export async function askForInput(questionText) {
   console.log(questionText);
